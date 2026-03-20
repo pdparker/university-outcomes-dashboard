@@ -2,7 +2,7 @@
 
 An interactive, self-contained dashboard for comparing Australian university outcomes across student experience, graduate satisfaction, and graduate employment metrics.
 
-**Live demo:** https://pip-prkr.github.io/university-outcomes-dashboard/
+**Live demo:** https://pdparker.github.io/university-outcomes-dashboard/
 
 ## Features
 
