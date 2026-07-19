@@ -386,8 +386,10 @@ const A = {
       let badge = '';
       if (score!==null && nScore!==null) {
         const diff = score - nScore;
-        const mag = isSal ? ('$'+Math.round(Math.abs(diff)/1000)+'K') : (Math.abs(diff/nScore*100).toFixed(1)+'%');
-        if (diff > 0.05) badge = `<span class="kpi-badge above">▲ ${mag} above avg</span>`;
+        const magNum = isSal ? Math.round(Math.abs(diff)/1000) : +Math.abs(diff/nScore*100).toFixed(1);
+        const mag = isSal ? ('$'+magNum+'K') : (magNum+'%');
+        if (magNum === 0) badge = `<span class="kpi-badge equal">≈ At national average</span>`;
+        else if (diff > 0.05) badge = `<span class="kpi-badge above">▲ ${mag} above avg</span>`;
         else if (diff < -0.05) badge = `<span class="kpi-badge below">▼ ${mag} below avg</span>`;
         else badge = `<span class="kpi-badge equal">≈ At national average</span>`;
       }
