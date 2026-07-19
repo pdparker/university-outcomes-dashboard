@@ -152,6 +152,7 @@ tbody tr:last-child td{border-bottom:none}
   .hdr select{min-width:200px}
 }
 </style>
+<script src="https://pdparker.github.io/dashboard-commons/commons.js" data-dash="outcomes"></script>
 </head>
 <body>
 
@@ -242,6 +243,7 @@ tbody tr:last-child td{border-bottom:none}
         <select id="tbl-metric-sel" class="ctrl-sel" onchange="A.set({metric:this.value})"></select>
         <span class="ctrl-sel-lbl">Subject area:</span>
         <select id="tbl-area-sel" class="ctrl-sel" onchange="A.set({sa:this.value})"></select>
+        <button class="ctrl-sel" style="cursor:pointer" onclick="exportTableCsv()">⬇ Export CSV</button>
       </div>
     </div>
     <div class="tbl-wrap">
@@ -714,9 +716,106 @@ const A = {
       document.getElementById(id).innerHTML = metricOptions();
     });
 
-    A.render();
+    // dashboard-commons: resolve ?level= / ?metric= / ?field= (synchronous), ?inst= (async via registry)
+    if (typeof DashCommons !== 'undefined') {
+      const lvl = DashCommons.state.get('level', 'UG');
+      if (lvl === 'UG' || lvl === 'PG') A.s.sl = lvl;
+
+      const allMetrics = MG.reduce((acc, g) => acc.concat(g.metrics), []);
+      const met = DashCommons.state.get('metric');
+      if (met && allMetrics.includes(met)) A.s.metric = met;
+
+      const fld = DashCommons.state.get('field');
+      if (fld && RAW.study_areas.some(a => a.alias === fld)) A.s.sa = fld;
+
+      DashCommons.registry().then(reg => {
+        const urlId = DashCommons.state.get('inst', 'australian-catholic-university');
+        const regInst = reg.byId[urlId];
+        const match = regInst && RAW.universities.find(u => u.title === regInst.name);
+        if (match) A.s.inst = match.alias;
+        A.render();
+      }).catch(() => { A.render(); });
+
+      // Keep the URL in sync with user-driven filter changes
+      const origSet = A.set;
+      A.set = function (u) {
+        origSet(u);
+        if ('inst' in u) {
+          if (!A.s.inst) { DashCommons.state.set('inst', null); return; }
+          const uni = RAW.universities.find(x => x.alias === A.s.inst);
+          DashCommons.registry().then(reg => {
+            const match = uni && reg.lookup(uni.title);
+            DashCommons.state.set('inst', match ? match.id : A.s.inst);
+          }).catch(() => { DashCommons.state.set('inst', A.s.inst); });
+        }
+        if ('sl' in u) DashCommons.state.set('level', A.s.sl === 'UG' ? null : A.s.sl);
+        if ('metric' in u) DashCommons.state.set('metric', A.s.metric === 'employment' ? null : A.s.metric);
+        if ('sa' in u) DashCommons.state.set('field', A.s.sa || null);
+      };
+    } else {
+      A.render();
+    }
   }
 };
+
+// ---- CSV EXPORT (rankings table, respects current metric/level/subject-area filter) ----
+function exportTableCsv() {
+  const {sl, metric, sa} = A.s;
+  const ma = metric;
+  const natl = A.natl(ma);
+  const nScore = natl?.score ?? natl?.s ?? null;
+  const unis = A.visibleUnis();
+
+  let rows = unis.map(u => {
+    const h = (HL[u.alias] && HL[u.alias][sl] && HL[u.alias][sl][ma]) || null;
+    return {title: u.title, score: h?.s ?? null, cl: h?.cl ?? null, cu: h?.cu ?? null};
+  });
+  rows.sort((a, b) => {
+    if (a.score === null && b.score === null) return a.title.localeCompare(b.title);
+    if (a.score === null) return 1;
+    if (b.score === null) return -1;
+    return b.score - a.score;
+  });
+  let rank = 0, prevScore = null;
+  rows.forEach(r => {
+    if (r.score !== null) { if (r.score !== prevScore) rank++; r.rank = rank; prevScore = r.score; }
+    else r.rank = null;
+  });
+
+  const lbl = MLABELS[ma] || ma;
+  const refLabel = sa ? 'diff_vs_field_avg' : 'diff_vs_national_avg';
+  const header = ['rank', 'institution', lbl, 'ci_low', 'ci_high', refLabel, 'national_avg', 'study_level', 'subject_area'];
+  const csvRows = [header];
+  rows.forEach(r => {
+    const diff = (r.score !== null && nScore !== null) ? +(r.score - nScore).toFixed(2) : '';
+    csvRows.push([
+      r.rank ?? '',
+      r.title,
+      r.score !== null ? r.score : '',
+      r.cl !== null ? r.cl : '',
+      r.cu !== null ? r.cu : '',
+      diff,
+      nScore !== null ? nScore : '',
+      sl,
+      sa ? (AMAP[sa]?.title || sa) : 'All study areas'
+    ]);
+  });
+
+  const csv = csvRows.map(row => row.map(v => {
+    const s = String(v);
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }).join(',')).join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'university-outcomes-' + ma + '-' + sl.toLowerCase() + (sa ? ('-' + sa) : '') + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 A.init();
 </script>
