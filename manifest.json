@@ -1,0 +1,15 @@
+{
+  "id": "outcomes",
+  "title": "University Outcomes",
+  "url": "https://pdparker.github.io/university-outcomes-dashboard/",
+  "repo": "pdparker/university-outcomes-dashboard",
+  "lastBuild": "2026-07-19",
+  "dataSources": [
+    {
+      "name": "compared.edu.au (QILT-derived: Graduate Outcomes Survey, Student Experience Survey)",
+      "url": "https://compared.edu.au",
+      "vintage": "2024 collection"
+    }
+  ],
+  "notes": "GOS/SES are annual collections; current dashboard shows the latest year only, no historical trend yet."
+}
