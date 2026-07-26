@@ -3,7 +3,7 @@
   "title": "University Outcomes",
   "url": "https://pdparker.github.io/university-outcomes-dashboard/",
   "repo": "pdparker/university-outcomes-dashboard",
-  "lastBuild": "2026-07-19",
+  "lastBuild": "2026-07-27",
   "dataSources": [
     {
       "name": "compared.edu.au (QILT-derived: Graduate Outcomes Survey, Student Experience Survey)",

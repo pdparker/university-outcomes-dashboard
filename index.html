@@ -26,6 +26,7 @@
   --border:#dde3ee;
   --radius:10px;
   --gap:16px;
+  --red-dark:#a51d1d;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--page);color:var(--text);font-size:14px;line-height:1.5}
 
@@ -126,7 +127,7 @@ tbody tr:last-child td{border-bottom:none}
 .t-inst{font-weight:600}
 .t-score{font-weight:700;text-align:right}
 .t-score.above{color:var(--green)}
-.t-score.below{color:var(--red)}
+.t-score.below{color:var(--red-dark)}
 .t-score.null-score{color:var(--grey);font-weight:400;font-style:italic;font-size:11px}
 .t-ci{font-size:11px;color:var(--text2);text-align:right}
 .t-vs{text-align:right}
@@ -151,10 +152,70 @@ tbody tr:last-child td{border-bottom:none}
   .kpi-row{grid-template-columns:1fr 1fr}
   .hdr select{min-width:200px}
 }
+
+/* PRINT-ONLY HEADER (hidden on screen, shown in print) */
+.print-only{display:none}
+
+/* PRINT STYLESHEET (board-pack-ready) */
+@media print{
+  @page{margin:14mm}
+
+  body{background:#fff}
+
+  .print-only{
+    display:block;
+    margin-bottom:14px;
+    padding-bottom:10px;
+    border-bottom:2px solid var(--navy);
+  }
+  .print-only .po-title{font-size:16px;font-weight:800;color:var(--navy)}
+  .print-only .po-meta{font-size:11px;color:var(--text2);margin-top:3px}
+  .print-only .po-inst{font-size:13px;font-weight:700;color:var(--text);margin-top:6px}
+
+  /* Hide interactive-only chrome: filters, toggles, search/export controls */
+  .hdr-controls,
+  .card-ctrls,
+  .toggle-group,
+  .hdr select,
+  .ctx-banner button{display:none!important}
+
+  /* Header simplifies to a plain brand strip (no dark ink block) */
+  .hdr{background:#fff!important;color:var(--text)!important;min-height:auto;padding:6px 0}
+  .hdr-brand{padding:0}
+  .hdr-brand .eyebrow{color:var(--text2);opacity:1}
+  .hdr-brand h1{color:var(--navy)}
+  .hdr-note{display:none}
+
+  /* Context banner: keep the narrative text, but don't rely on a printed background for legibility */
+  .ctx-banner{background:#fff!important;color:var(--text)!important;border:1px solid var(--border)}
+  .ctx-banner.visible{display:flex!important}
+
+  /* Study-area chip that's white-on-teal on screen needs a safe light/dark pairing in print */
+  .chip.area-active{background:var(--teal-light)!important;color:var(--teal)!important;border-color:var(--teal)!important}
+
+  /* Expand any scrollable/clipped containers so nothing is cut off */
+  .tbl-wrap{max-height:none!important;overflow:visible!important}
+
+  /* Avoid splitting cards/charts/tables across a page break */
+  .kpi,.card,.study-section,.table-section{break-inside:avoid;page-break-inside:avoid}
+  tbody tr{break-inside:avoid;page-break-inside:avoid}
+
+  /* Preserve meaningful colour on data indicators (above/below-avg cues, chips, bars) */
+  .kpi-badge,.vs-pill,.t-score,.chip,.bar-fill,.bar-ci-band,.srow-val{
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+}
 </style>
 <script src="https://pdparker.github.io/dashboard-commons/commons.js" data-dash="outcomes"></script>
 </head>
 <body>
+
+<div class="print-only" id="print-header">
+  <div class="po-title">Australian University Outcomes Dashboard</div>
+  <div class="po-meta">Printed from pdparker.github.io/university-outcomes-dashboard/ · <span id="print-date"></span></div>
+  <div class="po-inst" id="print-inst"></div>
+</div>
 
 <header class="hdr">
   <div class="hdr-brand">
@@ -358,6 +419,13 @@ const A = {
     });
     document.getElementById('ftr-sl').textContent = sl==='UG'?'Undergraduate data':'Postgraduate data';
 
+    // Print-only header (institution + level, since URL state isn't visible on a printed page)
+    document.getElementById('print-date').textContent = new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+    const printLevel = sl==='UG'?'Undergraduate':'Postgraduate';
+    document.getElementById('print-inst').textContent = inst
+      ? `Institution: ${UMAP[inst]?.title || inst} · ${printLevel}`
+      : `No institution selected · ${printLevel}`;
+
     // Context banner
     const banner = document.getElementById('ctx-banner');
     if (sa) {
@@ -476,7 +544,7 @@ const A = {
         ctx.setLineDash([5,4]);
         ctx.beginPath(); ctx.moveTo(x,ySc.top); ctx.lineTo(x,ySc.bottom); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle= sa ? '#0e9488' : '#e74c3c';
+        ctx.fillStyle= sa ? '#0e9488' : '#a51d1d'; /* darker than the line stroke: small text needs 4.5:1, the line itself only needs 3:1 */
         ctx.font='bold 10px system-ui';
         ctx.textAlign='left';
         ctx.fillText(sa?'Field avg':'Natl avg', x+4, ySc.top+14);
@@ -550,7 +618,10 @@ const A = {
         const nCiL=nCl!==null?Math.min(nCl/sc*100,100):null;
         const nCiR=nCu!==null?Math.min(nCu/sc*100,100):null;
         const above=hl?.ab;
-        const valCol=score===null?'var(--grey)':(above?'var(--green)':(score<(nScore||999)?'var(--red)':'var(--text)'));
+        const isBelowNatl=score!==null&&!above&&(score<(nScore||999));
+        // Colour alone isn't a sufficient cue (WCAG 1.4.1) — pair it with a text arrow, same convention as the KPI badges
+        const valCol=score===null?'var(--grey)':(above?'var(--green)':(isBelowNatl?'var(--red-dark)':'var(--text)'));
+        const valIcon=score===null?'':(above?'▲ ':(isBelowNatl?'▼ ':''));
         html+=`<div class="srow">
           <div class="srow-name">${lbl}</div>
           <div class="srow-bars">`;
@@ -566,7 +637,7 @@ const A = {
         }
         html+=`</div>
           <div>
-            <div class="srow-val" style="color:${valCol}">${ip!==null?A.fmt(score,ma):'<span class="srow-null">—</span>'}</div>
+            <div class="srow-val" style="color:${valCol}">${ip!==null?(valIcon+A.fmt(score,ma)):'<span class="srow-null">—</span>'}</div>
             ${np!==null&&ip!==null?`<div class="srow-natl">${A.fmt(nScore,ma)}</div>`:''}
           </div></div>`;
       });
