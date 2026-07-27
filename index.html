@@ -262,6 +262,7 @@ tbody tr:last-child td{border-bottom:none}
           <select id="peer-metric-sel" class="ctrl-sel" onchange="A.set({metric:this.value})"></select>
           <span class="ctrl-sel-lbl">Subject area</span>
           <select id="peer-area-sel" class="ctrl-sel" onchange="A.set({sa:this.value})"></select>
+          <button class="ctrl-sel" style="cursor:pointer" onclick="downloadPeerChartPng()">&#8681; Download PNG</button>
         </div>
       </div>
       <div class="peer-chart-area" id="peer-area">
@@ -886,6 +887,15 @@ function exportTableCsv() {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ---- PNG EXPORT (peer ranking chart) ----
+function downloadPeerChartPng() {
+  if (!A.charts.peer || !window.DashCommons) return;
+  const {sl, metric, sa} = A.s;
+  const url = A.charts.peer.toBase64Image();
+  const name = 'university-outcomes-peer-ranking-' + metric + '-' + sl.toLowerCase() + (sa ? ('-' + sa) : '') + '-' + new Date().toISOString().slice(0, 10) + '.png';
+  DashCommons.downloadFile(url, name);
 }
 
 A.init();
