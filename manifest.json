@@ -3,13 +3,13 @@
   "title": "University Outcomes",
   "url": "https://pdparker.github.io/university-outcomes-dashboard/",
   "repo": "pdparker/university-outcomes-dashboard",
-  "lastBuild": "2026-07-27",
+  "lastBuild": "2026-08-16",
   "dataSources": [
     {
       "name": "compared.edu.au (QILT-derived: Graduate Outcomes Survey, Student Experience Survey)",
       "url": "https://compared.edu.au",
-      "vintage": "2024 collection"
+      "vintage": "2025 GOS collection (Graduate Employment, Graduate Satisfaction); 2024 SES collection (Student Experience)"
     }
   ],
-  "notes": "GOS/SES are annual collections; current dashboard shows the latest year only, no historical trend yet."
+  "notes": "GOS/SES are annual collections released on different cycles, so the two metric families can sit a year apart; the dashboard shows the latest published year for each, with no historical trend yet. The 2025 GOS changed its labour-force definition to align with ABS, so employment metrics are not strictly comparable with earlier years."
 }
