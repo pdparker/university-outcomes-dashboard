@@ -42,8 +42,8 @@ blanks. That is the source's state, not a scrape failure.
 ## Survey vintages
 
 GOS and SES are released on different cycles, so the metric families can sit a
-year apart. As of the August 2026 refresh: Graduate Employment and Graduate
-Satisfaction are the **2025 GOS**; Student Experience is the **2024 SES**.
+year apart. As of the November 2026 refresh: Graduate Employment and Graduate
+Satisfaction are the **2025 GOS**; Student Experience is the **2025 SES**.
 Check which collection is live before assuming a change is real — and note the
 2025 GOS redefined the labour force to match ABS definitions, which shifts the
 employment metrics independently of any actual change in outcomes.

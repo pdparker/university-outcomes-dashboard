@@ -18,14 +18,14 @@ An interactive, self-contained dashboard for comparing Australian university out
 
 Data sourced from [compared.edu.au](https://www.compared.edu.au/) (the public face of the Australian Government's QILT surveys). Covers 49 Australian universities across 13 outcome metrics and 21 study areas at both undergraduate and postgraduate levels.
 
-**Last refreshed:** 16 August 2026.
+**Last refreshed:** 14 November 2026.
 
 The two survey families run on different release cycles, so the dashboard's metrics are not all from the same collection year:
 
 | Metric group | Survey | Collection |
 |---|---|---|
 | Graduate Employment, Graduate Satisfaction | Graduate Outcomes Survey (GOS) | 2025 |
-| Student Experience | Student Experience Survey (SES) | 2024 |
+| Student Experience | Student Experience Survey (SES) | 2025 |
 
 Two caveats worth knowing:
 
